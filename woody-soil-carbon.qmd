@@ -1,0 +1,374 @@
+---
+title: "Comparing 'Woody' and 'Non-Woody' soil carbon distributions"
+date: 2025-01-03
+author:
+  - name: Ruan de Wet
+    email: ruan@meatnaturallyafrica.com
+bibliography: references.bib
+execute:
+  echo: false
+  quiet: true
+  message: false
+  warning: false
+format:
+  typst:
+    toc: true
+    section-numbering: 1.1.a
+    bibliographystyle: "chicago-author-date"
+---
+
+```{r Load libraries}
+
+# # These are all the additional packages required to run this analysis. Please install any packages that you don't already have.
+# install.packages("tidyverse")
+# install.packages("gtExtras")
+# install.packages("pwr")
+
+library(tidyverse)
+library(gtExtras)
+library(pwr)
+
+```
+
+```{r Read in data}
+
+df_soils <- read_csv("data/soil_data.csv")
+df_cover <- read_csv("data/landcover_data.csv")
+df_grazingunit <- read_csv("data/grazingunit_data.csv")
+
+```
+
+## Introduction
+
+During the VCS validation audit for the VM0042 project titled [Grassland Restoration and Stewardship in South Africa (GRASS)](https://registry.verra.org/app/projectDetail/VCS/2349), a Forward Action Request (FAR) was raised regarding the sampling applied to monitor soil organic carbon stocks between rangelands of different tree densities (greater and less than 10% canopy cover). The wording of the FAR is provided below:
+
+> VVB in the first verification will assess the stratified sampling applied by PP for the parameter SOCbsl,i,t (Areal-average soil organic carbon stocks in the baseline scenario for sample unit i in year t) to check the sampling approach and its conservativeness. PP has proposed to apply stratified random sampling in selecting sampling points to distinguish between rangelands of different tree densities (greater and less than 10% canopy cover).
+
+Additional soil samples were collected in the 2023 sampling campaign to address this FAR. Soil samples are grouped into strata from rangelands with greater and with less than 10% canopy cover - labelled 'woody' and 'non-woody' strata, respectively.
+
+### Sampling approach
+
+#### Initial sampling strategy
+
+Following the requirements of Section 8.6 of the VM0042 Methodology, soil sampling sites were randomly assigned across the project accounting area using `st_sample()` from the `{sf}` package [@pebesma-2018; @pebesma-bivand-2023] in R [@RManual]. This generates a simple random sample of points within the defined spatial features - the eligible grazing land within the active associations under the GRASS project. Variation of the site location was allowed based on field conditions within approximately 200 meters. This is to account for unforeseen edge effects from foot paths, watering sites, rocky outcrops, or any other factors that could skew the representativeness of the samples collected from that site relative to the surrounding landscape.
+
+Initially, no distinction was made between grazing land with or without tree cover and the only strata of interest were the implementation landscapes (e.g. uMkhomazi Catchment) to ensure that sufficient sampling density was obtained within each landscape. Given that the statistical power of the soil assessments are inversely correlated with the number of strata, no further stratification was originally made within the implementation landscapes.
+
+The minimum target sampling density per landscape was one sample site per 500 hectares. The field sampling team collected additional samples beyond this minimum requirement at their discretion based on their assessment of the variability of the topology, land use history, and ecological context of the grazing lands.
+
+#### Defining eligible grazing lands
+
+An additional stratum was introduced with the raising of this FAR, solely for the purposes of assessing whether any meaningful distinctions exist across grazing lands of different tree densities (greater and less than 10% canopy cover).
+
+This was necessitated because the [Verified Carbon Standard (VCS) Program Definitions](https://verra.org/wp-content/uploads/2022/12/vcs-program-definitions-v4.3-final.pdf) defines "Grasslands" as also including savannah ecosystems that have a mosaic of grass and tree covers, which aligns with the latest ecological science on open ecosystems [@bond-2019]. The following description of a grassland is provided:
+
+> Areas dominated by grasses with a density of trees too low to meet an internationally accepted definition of forest, including savannas (i.e., grasslands with scattered trees). Grasslands also include managed rangeland and pastureland that is not considered cropland where the primary land use is grazing, and which may also include grass-dominated systems managed for conservation or recreational purposes.
+
+Within the initial validation audit, a Corrective Action Request was made by the reviewers with the expectation that a maximum woody cover density threshold of 10% should be applied as this is included in the [FAO definition](https://www.fao.org/3/I8661EN/i8661en.pdf) of a forest. This definition, however, would exclude almost all definitions of a savannah, which contradicts the [VCS Program Definitions](https://verra.org/wp-content/uploads/2022/12/vcs-program-definitions-v4.3-final.pdf) that explicitly incorporate savannahs in the definition of a grassland. Savannahs include a wide range of tree densities that have been long described in southern Africa to exceed 10% canopy cover density while still supporting grazing practices [@edwards-1983].
+
+The complexity of contradicting forest definitions has been addressed in South Africa [through legislation as well as in the South African court](https://www.dffe.gov.za/sites/default/files/legislations/policyandguidelines_controlofdevelopmentaffecting_naturalforests.pdf). This is supported by a technical definition that includes a largely contiguous canopy with a cover threshold of 75%, the dominance of trees, and the absence of grasses and fire. This definition is consistent with the objective of the VCS eligibility criteria, as it distinguishes forested land that is not grazed (due to a lack of grass dominance) from treed savannahs that *are* grazed.
+
+To assess whether or not additional stratification is required to distinguish land that falls within the stricter definition of a savannah (\>10% woody cover) from land that falls within a stricter definition of a non-treed grassland (\<10% woody cover), soil carbon measurements were collected across these strata. If statistically significant difference in soil carbon concentrations can be detected between sampling sites in the more woody cover relative to the less woody land, this would suggest that further interrogation of the monitoring plan may be justified and, perhaps, additional stratification of the project area would be required.
+
+The 2018 South African National Land Cover (SANLC) dataset was used to distinguish between the strata. This dataset is developed, maintained and distributed by the South African [Department of Forestry, Fisheries, and the Environment (DFFE)](https://egis.environment.gov.za/%20sa_national_land_cover_datasets).
+
+SANLC Classes 3, 4, and 42 are the only eligible land cover classes that have \>10% woody canopy cover. Additional sampling sites were randomly assigned within these land cover classes. The total extent of these eligible woody classes account for approximately 8%-10% of the total area, depending on the landscape.
+
+### Analysis approach
+
+A two-sample t-test is used in this assessment to compare measured soil carbon results across the two strata. The null hypothesis is tested that the true difference in means between the two groups is equal to 0.
+
+#### Power analysis
+
+To determine the required sample size in the `Woody` stratum, a power analysis has been run using the `pwr.t2n.test()` from the `{pwr}` package [@pwr-2020]. This test takes as input the existing sample size of the `Non-Woody` stratum, the standard deviation of the same sample as the effect size, and calculates the minimum required sample size of the `Woody` stratum to detect a difference between the samples with a power of at least 0.5.
+
+```{r Power analysis}
+
+df_soc = df_soils %>% 
+  filter(!is.na(SOC_perc)) %>%
+  mutate(SOC_log10 = log10(SOC_perc))
+
+df_soc_woody = df_soc %>%
+  filter(Group == "Woody")
+df_soc_nwoody = df_soc %>%
+  filter(Group == "Non-Woody")
+
+pwr_soc = pwr::pwr.t2n.test(
+  n1 = nrow(df_soc_nwoody),
+  d = sd(df_soc_nwoody$SOC_log10),
+  power = 0.5,
+  alternative = "two.sided"
+)
+
+pwr_soc
+
+```
+
+To maximize the power of this analysis, more than `{r} round(pwr_soc$n2)` sites needed to be sampled from the `Woody` stratum. Given that `{r} round(nrow(df_soc_woody))` sites were sampled from the `Woody` stratum, it can be concluded that the sample size was more than sufficient.
+
+## Exploratory Data Analysis
+
+### Soil carbon data
+
+An initial visual exploration of the soil data will be helpful to understand what the distributions look like.
+
+```{r soc summary table}
+#| label: tbl-soc-summary
+
+df_soc %>% 
+  filter(!is.na(SOC_perc)) %>%
+  group_by(Group) %>%
+  summarise(count = n(),
+            mean = round(mean(SOC_perc, na.rm = T),4),
+            sd = round(sd(SOC_perc, na.rm = T),4)) %>%
+            # dist = list(SOC_perc)) %>%
+  gt() %>%
+  tab_header(title = md("Soil carbon (%)"),
+             subtitle = md("Summary statistics across `woody` (>10% cover) and `non-woody` (<10% cover) strata")) %>%
+  cols_width(Group  ~ px(200),
+             everything() ~ px(150)) %>%
+  # gt_plt_dist(dist) %>%
+  gt_theme_nytimes()
+
+```
+
+```{r EDA raw soc distribution}
+#| label: fig-soc-dist
+#| fig-cap: "Soil carbon (%) distribution across target landscapes and `woody` (>10% cover) and `non-woody` (<10% cover) strata."
+
+df_soc %>% 
+  filter(!is.na(SOC_perc)) %>%
+  ggplot(aes(x = SOC_perc, fill = Landscape_Name)) +
+  geom_histogram(col = "black", bins = 30) +
+  labs(x = "SOC (%)",
+       y = "Frequency",
+       fill = "Landscape") +
+  scale_fill_brewer(palette = "Accent") +
+  facet_grid(Group~., scales = "free") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+There is a considerable skew to the data, so a log10 transformation might better represent the SOC data as a Gaussian response variable.
+
+```{r log10 soc summary table}
+#| label: tbl-log10soc-summary
+
+df_soc %>% 
+  filter(!is.na(SOC_perc)) %>%
+  mutate(SOC_log10 = log10(SOC_perc)) %>%
+  group_by(Group) %>%
+  summarise(count = n(),
+            mean = round(mean(SOC_log10, na.rm = T),4),
+            sd = round(sd(SOC_log10, na.rm = T),4)) %>%
+            # dist = list(SOC_perc)) %>%
+  gt() %>%
+  tab_header(title = md(html("Log<sub>10</sub>-transformed soil carbon (%)")),
+             subtitle = md("Summary statistics across `woody` (>10% cover) and `non-woody` (<10% cover) strata")) %>%
+  cols_width(Group  ~ px(200),
+             everything() ~ px(150)) %>%
+  # gt_plt_dist(dist) %>%
+  gt_theme_nytimes()
+
+```
+
+```{r log10 figure}
+#| label: fig-log10soc-dist
+#| fig-cap: "Log10-transformed soil carbon (%) distribution across target landscapes and `woody` (>10% cover) and `non-woody` (<10% cover) strata."
+
+df_soc %>% 
+  filter(!is.na(SOC_perc)) %>%
+  ggplot(aes(x = SOC_perc, fill = Landscape_Name)) +
+  geom_histogram(col = "black", bins = 30) +
+  scale_x_log10() +
+  scale_fill_brewer(palette = "Accent") +
+  labs(x = "SOC (%)\nlog10 scale",
+       y = "Frequency",
+       fill = "Landscape") +
+  facet_grid(Group~., scales = "free") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+```{r EDA log10 scale}
+#| label: fig-log10soc-boxplots
+#| fig-cap: "Log10-transformed soil carbon (%) boxplots across `woody` (>10% cover) and `non-woody` (<10% cover) strata."
+
+df_soc %>% 
+  filter(!is.na(SOC_perc)) %>%
+  ggplot(aes(x = Group, y = SOC_perc)) +
+  geom_boxplot(outlier.alpha = 0, fill = "grey") +
+  geom_point(aes(fill = Landscape_Name), shape = 21, 
+             position = position_jitter(height = 0, width = 0.1, 
+                                        seed = 123)) +
+  scale_y_log10() +
+  scale_fill_brewer(palette = "Accent") +
+  labs(y = "SOC (%)\nlog10 scale",
+       x = "",
+       fill = "Landscape") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+### GRASS VCS Project Boundary
+
+The first VCS monitoring period includes associations that joined the GRASS project in 2021 and 2022. The boundary of the total area under management for each association was mapped, but this includes a variety of land cover classes that are ineligible for inclusion in the VCS project. Details of the eligibility criteria and further exclusions that were made go beyond the scope of this report and can be reviewed in the GRASS validation audit documentation on the public [Verra registry](https://registry.verra.org/app/projectDetail/VCS/2349).
+
+The `Woody` and `Non-Woody` strata are represented within the eligible boundary areas.
+
+```{r}
+#| label: tbl-lndscape-area
+
+df_landscape_area = df_grazingunit %>%
+  filter(Landscape_Name %in% df_soc$Landscape_Name) %>%
+  summarize(Hectares_Total = sum(`Total Area`),
+            Hectares_Elig = sum(`Eligible Area`), 
+            .by = Landscape_Name) 
+  # mutate(Area_Elig_Perc = round(100*Area_Elig/Area_Total,2))
+
+df_landscape_area %>%
+  gt() %>%
+  tab_header(title = md("Total and eligible area (ha)"),
+             subtitle = md("Across all landscapes represented in the first monitoring period")) %>%
+  cols_label(Landscape_Name ~ "Landscape Name",
+             Hectares_Total ~ "Total area (ha)",
+             Hectares_Elig ~ "Eligible area (ha)") %>%
+  cols_width(Landscape_Name ~ px(200),
+             everything() ~ px(150)) %>%
+  gt_theme_nytimes() %>%
+  fmt_number()
+
+```
+
+### Land cover data
+
+```{r Tidy SANLC data}
+
+df_cover_tidy = df_cover %>%
+  pivot_longer(names_to = "Landscape_Name", values_to = "SANLC_perc", col = Tsitsa:KwaBhaca) %>%
+  left_join(df_landscape_area, by = "Landscape_Name") %>%
+  filter(!is.na(SANLC_perc),
+         !is.na(Hectares_Total)) %>%
+  mutate(SANLC_ha = Hectares_Total*(SANLC_perc/100)) 
+
+```
+
+The [SANLC2018](https://egis.environment.gov.za/%20sa_national_land_cover_datasets) land cover classifications for all associations boundaries in the first monitoring period have been extracted and summarized per landscape.
+
+After excluding ineligible land cover, the remaining eligible classes can be categorised as either `Woody` (classes 3, 4, and 42) or `Non-Woody` (all other classes). The eligible `Woody` classes account for 8%-10% of the total land cover, depending on the landscape.
+
+```{r}
+
+df_elig_labelled = df_cover_tidy %>%
+  filter(Eligibility == "Include") %>%
+  mutate(Group = ifelse(Class %in% c(3,4, 42), "Woody", "Non-Woody")) 
+
+```
+
+
+```{r}
+#| label: tbl-sanlc-strata
+
+df_elig_labelled %>%
+  dplyr::select(Class, ClassName, Group) %>%
+  unique() %>%
+  arrange(Class) %>%
+  gt(groupname_col = "Group",
+     row_group_as_column = TRUE) %>%
+  tab_header(title = md("South African National Land Cover (SANLC)"),
+             subtitle = md("Eligible classes occuring across GRASS associations and their assignment to `Woody` and `Non-Woody` strata")) %>%
+  cols_label(ClassName ~ "Class Name") %>%
+  gt_theme_nytimes()
+
+```
+
+The simple random site allocation for sampling within the `Woody` stratum ensures that the samples are representative. Given that the `Non-Woody` stratum accounts for a much larger extent of the eligible land than the `Woody` stratum (\~90/10), equal sampling efforts across both strata result in an unequal sample size. Additional sites were, therefore, sampled to increase the `Woody` stratum sample size and improve the sample ratio (\~70/30).
+
+```{r combine hectares and soil sample sites}
+
+df_soil_sites = df_soc %>%
+   summarize(Soil_Sites = n(), .by = c("Landscape_Name", "Group"))
+
+
+coef_sec.axis = 380
+
+df_elig_comb = df_elig_labelled %>%
+   summarize(SANLC_ha = sum(SANLC_ha), .by = c("Group", "Landscape_Name")) %>%
+   left_join(df_soil_sites, by = c("Landscape_Name", "Group")) %>%
+    mutate(Soil_Sites = Soil_Sites*coef_sec.axis) %>%
+    pivot_longer(cols = c("SANLC_ha", "Soil_Sites")) %>%
+    mutate(name = factor(name, levels = c("Soil_Sites", "SANLC_ha"), labels = c("Sampling Sites", "Land Cover"))) 
+
+
+```
+
+```{r}
+#| label: fig-sanlc-woody
+#| fig-cap: "Eligible land cover extent (ha) and number of soil sampling sites between `woody` (>10% cover) and `non-woody` (<10% cover) strata across the relevant landscapes."
+
+
+df_elig_comb %>%
+  ggplot(aes(y = Group, x = value, fill = Landscape_Name)) +
+  geom_bar(stat = "identity", col = "black") +
+  geom_bar(stat = "identity", col = "black") +
+  facet_grid(name~., scales = "free") +
+  scale_fill_brewer(palette = "Accent") +
+  scale_x_continuous(labels=function(x) format(x, big.mark = ",", decimal.mark = ".", scientific = FALSE),
+                     name = "Land cover extent (hectares)", 
+                     sec.axis = sec_axis(~./coef_sec.axis, name = "Soil sample sites" )) +
+  labs(fill = "Landscape") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+  
+
+```
+
+## Parametric Test Assumptions
+
+In order to apply a parametric t-test, the data should be Gaussian (normally distributed) and homoscedastic (equal variance). If these assumptions are violated, then an alternative test, such as the Welch t-test, may be required.
+
+This [STHDA article](http://www.sthda.com/english/wiki/unpaired-two-samples-t-test-in-r) provides more information on the steps followed in this analysis.
+
+### Normal distribution
+
+A visual inspection of the log10-transformed SOC data indicates that the data are normally distributed. The Shapiro-Wilk normality test can be used to test this more quantitatively. The null hypothesis is that the data are normal. If p-value \> 0.05, then the data are not significantly different from normal.
+
+```{r Test for normality}
+
+with(df_soc, shapiro.test(SOC_log10[Group == "Non-Woody"])) # p-value = 0.1072
+with(df_soc, shapiro.test(SOC_log10[Group == "Woody"])) # p-value = 0.07873
+
+```
+
+For both "Woody" and "Non-Woody" data, the p-values are \> 0.05. We can therefore assume normality for both datasets.
+
+### Equal variance
+
+The homogeneity in variances of the two groups can be tested with an F-test. The null hypothesis is that the ratio of variances is equal to 1.
+
+```{r Test for equal variance}
+
+var.test(SOC_log10 ~ Group, data = df_soc) # p-value = 0.01134
+
+```
+
+The p-value is \< 0.05. We can therefore reject the null hypothesis and infer that the ratio of variances are not equal to 1. The data have therefore failed the test of equal variance and a non-parametric two-sample t-test (Welch t-test) needs to be applied.
+
+### Welch two-sample t-test
+
+The null hypothesis of the t-test is that the true difference in means between the two groups is equal to 0. There's no prior expectation that one group would be greater or less than the other, so a two-sided hypothesis is applied by default.
+
+```{r}
+
+res <- t.test(SOC_log10 ~ Group, data = df_soc, var.equal = FALSE) # p-value = 0.2302
+res
+
+```
+
+## Conclusion
+
+The p-value is \> 0.05, so the null hypothesis cannot be rejected, and it can be concluded that **there is no difference in SOC between the `Woody` and `Non-Woody` strata**.
+

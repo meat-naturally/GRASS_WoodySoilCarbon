@@ -1,0 +1,50 @@
+﻿GrazingUnit_ID,Association_ID,GrazingUnit_Name,Association_Official,Landscape_Name,Start_Year,Total Area,Eligible Area
+DH09,DH09,Jama,KwaJama,uMfolozi-uMhlatuze,2021,1595.32,1313.09
+DH22,DH22,Siyaphambili,Siyaphambili,uMfolozi-uMhlatuze,2021,3218.88,2526.4
+DH23,DH23,Zabalaza,Zabalaza,uMfolozi-uMhlatuze,2021,2032.19,1849.39
+DH26,DH26,Zulu Rock,Nhlopheni Zulu Rock,uMfolozi-uMhlatuze,2021,4338.07,3859.57
+DM04,DM04,Gomane,Gomane,uMkhomazi,2021,3880.81,2539.57
+DM15,DM15,Qutshini,Qutshini,uMkhomazi,2021,2051.81,1381.18
+DM06,DM06,Inzinga,Inzinga,uMkhomazi,2021,4029.48,2748.51
+DM11,DM11,Nhlabamkhosi,Nhlabamkhosi,uMkhomazi,2021,1038.68,751.94
+DM14,DM14,Ntshiyabantu,Ntshiyabantu,uMkhomazi,2021,1620.57,771.84
+DT01,DT01,Bambanani,Bambanani,Tsitsa,2021,3750.5,2115.03
+DT02,DT02,Batlokoa,Sondelani Hlankomo,Tsitsa,2021,10153.8,6367.2
+DT04,DT04,Frank,Frank,Tsitsa,2021,2535.31,1557.18
+DT06,DT06,Lower Tsitsana,Lower Tsitsana,Tsitsa,2021,5559.4,4251.65
+DT11,DT11,Simunye,Simunye,Tsitsa,2021,2690.49,1773.88
+DT13,DT13,Sophonia West B,Sophonia West 2,Tsitsa,2021,4963.17,3485.68
+DT15,DT15,Upper Tsitsana,Makhunga,Tsitsa,2021,5263.78,3597.79
+DB01,DB01,Colana,Colana,KwaBhaca,2022,2413.28,1513.06
+DB02,DB02,Masifunisane,Masifunisane,KwaBhaca,2022,4135.31,2706.61
+DB03,DB03,Upper Mkhemane,Upper Mkhemane,KwaBhaca,2022,6130.32,3941.85
+DH01,DH01,Chibide,Qoqazonke,uMfolozi-uMhlatuze,2022,1892.2,1525.39
+DH03,DH03,Esibongweni,Ebhubesini,uMfolozi-uMhlatuze,2022,1055.15,982.39
+DH05,DH04,Esigcalabeni South,Ingungumbane,uMfolozi-uMhlatuze,2022,2729.49,1485.7
+DH10,DH10,KwaGade,Vukasime,uMfolozi-uMhlatuze,2022,2039.36,1899.71
+DH11,DH03,KwaManyoni,Ebhubesini,uMfolozi-uMhlatuze,2022,772.37,664.57
+DH13,DH13,Langewacht,Ubunye bakwaNobamba,uMfolozi-uMhlatuze,2022,502.22,115.98
+DH14,DH14,Mbekuzeni,Mbekuzeni,uMfolozi-uMhlatuze,2022,988.74,883.1
+DH16,DH16,Ngwebini,Ngwebini,uMfolozi-uMhlatuze,2022,3045.23,2727.94
+DH17,DH17,Nhlabamkhosi,Nhlabamkhosi,uMfolozi-uMhlatuze,2022,3027.05,2325.21
+DH18,DH14,Nkankazi,Mbekuzeni,uMfolozi-uMhlatuze,2022,435.74,415.8
+DH19,DH03,Obotsheni,Ebhubesini,uMfolozi-uMhlatuze,2022,685.55,638.11
+DH21,DH21,Siyafuya,Siyafuya,uMfolozi-uMhlatuze,2022,2074.5,1802.64
+DH24,DH10,Vutshini,Vukasime,uMfolozi-uMhlatuze,2022,1108.65,960.33
+DH25,DH13,Wewlusta,Ubunye bakwaNobamba,uMfolozi-uMhlatuze,2022,1761.22,1371.5
+DM07,DM07,Kwakhetha,Kwakhetha,uMkhomazi,2022,1373.32,937.36
+DM09,DM09,Mqatsheni,Mqatsheni,uMkhomazi,2022,2121.63,1173.3
+DM12,DM12,Nkangala,Enkangala,uMkhomazi,2022,2608.63,2174.83
+DM16,DM16,Ekukhanyeni,Ekukhanyeni,uMkhomazi,2022,1138.98,803.08
+DM18,DM18,Similobha,Smilobha,uMkhomazi,2022,756.43,348.42
+DM19,DM19,Nhlambamasoka,Nhlambamasoka,uMkhomazi,2022,1051.85,796.83
+DM20,DM20,Nhlathimbe,Nhlathimbe,uMkhomazi,2022,3216.9,2674.98
+DM21,DM21,Tsopaneng,Tsupaneng,uMkhomazi,2022,1203.1,980.14
+DT03,DT03,Caba,Singibi,Tsitsa,2022,4987.21,3376.84
+DT07,DT07,Ngcele,Siyolise,Tsitsa,2022,2676.82,1411.83
+DT08,DT08,Nkalweni Gqaqhala,Snenjongo,Tsitsa,2022,6467.74,3337.58
+DT09,DT09,Nkonkweni,Vukuzenzele,Tsitsa,2022,2083.33,1726.75
+DT10,DT10,Shukunxa,Shukunxa,Tsitsa,2022,3775.21,2609.53
+DT12,DT12,Somavilli,Siyakhula,Tsitsa,2022,3527,2326.34
+DW02,DW02,Matheko,Matheko,Wild Coast,2022,3472.96,1800.84
+DW03,DW03,Msikaba,Masiphumelele,Wild Coast,2022,3580.99,2035.8
