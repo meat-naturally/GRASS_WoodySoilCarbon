@@ -1,6 +1,6 @@
 ---
 title: "Comparing 'Woody' and 'Non-Woody' soil carbon distributions"
-date: 2025-01-03
+date: 2025-01-18
 author:
   - name: Ruan de Wet
     email: ruan@meatnaturallyafrica.com
@@ -37,6 +37,7 @@ df_cover <- read_csv("data/landcover_data.csv")
 df_grazingunit <- read_csv("data/grazingunit_data.csv")
 
 ```
+
 
 ## Introduction
 
@@ -76,7 +77,11 @@ SANLC Classes 3, 4, and 42 are the only eligible land cover classes that have \>
 
 ### Analysis approach
 
-A two-sample t-test is used in this assessment to compare measured soil carbon results across the two strata. The null hypothesis is tested that the true difference in means between the two groups is equal to 0.
+#### Statistical approach
+
+A two-sample t-test is used in this assessment to compare measured soil carbon results across the two strata (`Woody` and `Non-Woody` land). The null hypothesis is tested that the true difference in means between the two groups is equal to 0. 
+
+If the null hypothesis is rejected (p-value \< 0.5), it can be concluded that there is a statistically significant difference in SOC between the two strata and evaluation of SOC across the [GRASS](https://registry.verra.org/app/projectDetail/VCS/2349) project area should be stratified by woody cover. If the null hypothesis is not rejected (p-value \> 0.5), it can be inferred that there is no difference in SOC between the two strata and stratification across woody cover categories is unnecessary for the evaluation of SOC.
 
 #### Power analysis
 
@@ -146,7 +151,7 @@ df_soc %>%
   scale_fill_brewer(palette = "Accent") +
   facet_grid(Group~., scales = "free") +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", panel.grid = element_line(colour = "white"))
 
 ```
 
@@ -188,7 +193,7 @@ df_soc %>%
        fill = "Landscape") +
   facet_grid(Group~., scales = "free") +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", panel.grid = element_line(colour = "white"))
 
 ```
 
@@ -209,7 +214,7 @@ df_soc %>%
        x = "",
        fill = "Landscape") +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", panel.grid = element_line(colour = "white"))
 
 ```
 
@@ -255,7 +260,6 @@ df_cover_tidy = df_cover %>%
   mutate(SANLC_ha = Hectares_Total*(SANLC_perc/100)) 
 
 ```
-
 The [SANLC2018](https://egis.environment.gov.za/%20sa_national_land_cover_datasets) land cover classifications for all associations boundaries in the first monitoring period have been extracted and summarized per landscape.
 
 After excluding ineligible land cover, the remaining eligible classes can be categorised as either `Woody` (classes 3, 4, and 42) or `Non-Woody` (all other classes). The eligible `Woody` classes account for 8%-10% of the total land cover, depending on the landscape.
@@ -292,15 +296,17 @@ The simple random site allocation for sampling within the `Woody` stratum ensure
 df_soil_sites = df_soc %>%
    summarize(Soil_Sites = n(), .by = c("Landscape_Name", "Group"))
 
-
-coef_sec.axis = 380
-
 df_elig_comb = df_elig_labelled %>%
    summarize(SANLC_ha = sum(SANLC_ha), .by = c("Group", "Landscape_Name")) %>%
    left_join(df_soil_sites, by = c("Landscape_Name", "Group")) %>%
-    mutate(Soil_Sites = Soil_Sites*coef_sec.axis) %>%
+    mutate(sum_ha = sum(SANLC_ha),
+           sum_sites = sum(Soil_Sites), .by = Group) %>%
+    mutate(coef_sec.axis = max(sum_ha)/max(sum_sites),
+           Soil_Sites = Soil_Sites*coef_sec.axis) %>%
     pivot_longer(cols = c("SANLC_ha", "Soil_Sites")) %>%
     mutate(name = factor(name, levels = c("Soil_Sites", "SANLC_ha"), labels = c("Sampling Sites", "Land Cover"))) 
+
+coef_sec.axis = mean(df_elig_comb$coef_sec.axis)
 
 
 ```
@@ -317,11 +323,11 @@ df_elig_comb %>%
   facet_grid(name~., scales = "free") +
   scale_fill_brewer(palette = "Accent") +
   scale_x_continuous(labels=function(x) format(x, big.mark = ",", decimal.mark = ".", scientific = FALSE),
-                     name = "Land cover extent (hectares)", 
+                     name = "Eligible land cover extent (hectares)", 
                      sec.axis = sec_axis(~./coef_sec.axis, name = "Soil sample sites" )) +
   labs(fill = "Landscape") +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", panel.grid = element_line(colour = "white"))
   
 
 ```
@@ -338,8 +344,8 @@ A visual inspection of the log10-transformed SOC data indicates that the data ar
 
 ```{r Test for normality}
 
-with(df_soc, shapiro.test(SOC_log10[Group == "Non-Woody"])) # p-value = 0.1072
-with(df_soc, shapiro.test(SOC_log10[Group == "Woody"])) # p-value = 0.07873
+with(df_soc, shapiro.test(SOC_log10[Group == "Non-Woody"])) # p-value = 0.06634
+with(df_soc, shapiro.test(SOC_log10[Group == "Woody"])) # p-value = 0.3442
 
 ```
 
@@ -351,11 +357,11 @@ The homogeneity in variances of the two groups can be tested with an F-test. The
 
 ```{r Test for equal variance}
 
-var.test(SOC_log10 ~ Group, data = df_soc) # p-value = 0.01134
+var.test(SOC_log10 ~ Group, data = df_soc) # p-value = 0.02545
 
 ```
 
-The p-value is \< 0.05. We can therefore reject the null hypothesis and infer that the ratio of variances are not equal to 1. The data have therefore failed the test of equal variance and a non-parametric two-sample t-test (Welch t-test) needs to be applied.
+The p-value is \< 0.05. We can therefore reject the null hypothesis and infer that the ratio of variances is not equal to 1. The data have therefore failed the test of equal variance and a non-parametric two-sample t-test (Welch t-test) needs to be applied.
 
 ### Welch two-sample t-test
 
@@ -363,7 +369,7 @@ The null hypothesis of the t-test is that the true difference in means between t
 
 ```{r}
 
-res <- t.test(SOC_log10 ~ Group, data = df_soc, var.equal = FALSE) # p-value = 0.2302
+res <- t.test(SOC_log10 ~ Group, data = df_soc, var.equal = FALSE) # p-value = 0.4957
 res
 
 ```
